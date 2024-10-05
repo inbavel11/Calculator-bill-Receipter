@@ -1,0 +1,120 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.io.FileWriter;
+import java.io.IOException;
+
+class Product {
+    private String name;
+    private double price;
+    private int quantity;
+
+    public Product(String name, double price, int quantity) {
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getTotalPrice() {
+        return price * quantity;
+    }
+}
+
+class Receipt {
+    private List<Product> products = new ArrayList<>();
+    private double taxRate = 0.05;  // 5% tax
+    private double discountRate = 0.10;  // 10% discount
+
+    public void addProduct(Product product) {
+        products.add(product);
+    }
+
+    public double calculateSubtotal() {
+        return products.stream().mapToDouble(Product::getTotalPrice).sum();
+    }
+
+    public double calculateTax(double subtotal) {
+        return subtotal * taxRate;
+    }
+
+    public double calculateDiscount(double subtotal) {
+        return subtotal * discountRate;
+    }
+
+    public double calculateTotal(double subtotal, double tax, double discount) {
+        return subtotal + tax - discount;
+    }
+
+    public void generateReceipt() {
+        double subtotal = calculateSubtotal();
+        double tax = calculateTax(subtotal);
+        double discount = calculateDiscount(subtotal);
+        double total = calculateTotal(subtotal, tax, discount);
+
+        System.out.println("Receipt:");
+        System.out.println("--------");
+        products.forEach(p -> System.out.println(p.getName() + " x" + p.getQuantity() + ": $" + p.getTotalPrice()));
+        System.out.println("Subtotal: $" + subtotal);
+        System.out.println("Tax: $" + tax);
+        System.out.println("Discount: $" + discount);
+        System.out.println("Total: $" + total);
+    }
+
+    public void saveReceiptAsTextFile(String filename) {
+        try (FileWriter writer = new FileWriter(filename)) {
+            writer.write("Receipt:\n");
+            writer.write("--------\n");
+            for (Product p : products) {
+                writer.write(p.getName() + " x" + p.getQuantity() + ": $" + p.getTotalPrice() + "\n");
+            }
+            double subtotal = calculateSubtotal();
+            double tax = calculateTax(subtotal);
+            double discount = calculateDiscount(subtotal);
+            double total = calculateTotal(subtotal, tax, discount);
+            writer.write("Subtotal: $" + subtotal + "\n");
+            writer.write("Tax: $" + tax + "\n");
+            writer.write("Discount: $" + discount + "\n");
+            writer.write("Total: $" + total + "\n");
+        } catch (IOException e) {
+            System.out.println("An error occurred while saving the receipt: " + e.getMessage());
+        }
+    }
+}
+
+public class ReceiptCalculator {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Receipt receipt = new Receipt();
+
+        while (true) {
+            System.out.print("Enter item name (or 'done' to finish): ");
+            String name = scanner.nextLine();
+            if (name.equalsIgnoreCase("done")) break;
+
+            System.out.print("Enter item price: ");
+            double price = scanner.nextDouble();
+
+            System.out.print("Enter item quantity: ");
+            int quantity = scanner.nextInt();
+            scanner.nextLine();  // Consume newline
+
+            Product product = new Product(name, price, quantity);
+            receipt.addProduct(product);
+        }
+
+        receipt.generateReceipt();
+        receipt.saveReceiptAsTextFile("receipt.txt");
+    }
+}
